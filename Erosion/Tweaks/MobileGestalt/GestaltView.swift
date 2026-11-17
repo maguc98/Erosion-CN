@@ -104,13 +104,13 @@ struct GestaltView: View {
                                     mgSubtype = mgOgSubtype
                                 }
                             }
-                        Text("仅控制 ArtworkDeviceSubType。关闭时强制使用本机原厂值；开启后可选择测试参数。不会修改机型标识或其他屏幕参数。修改后需重启验证。")
+                        Text("仅修改 ArtworkDeviceSubType，不是灵动岛位置调节：不会把系统灵动岛或 Siri 动画下移。不同子类型可能造成界面比例或裁切异常；没有对应机型实测依据时，请保持原厂值。")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     if (ogMachineName == "iPhone13,1" && mgEnableDisplaySubtypeOverride) || mgOverrideGates {
                         HStack {
-                            Picker("屏幕子类型", selection: $mgSubtype) {
+                            Picker("屏幕子类型（非位置调节）", selection: $mgSubtype) {
                                 Text("原始默认 (\(mgOgSubtype))").tag(mgOgSubtype)
                                 if mgOgSubtype != 2436 {
                                     if isDynamIslandHD() && doubleSysVrs() < 19.0 {
