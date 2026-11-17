@@ -12,6 +12,7 @@ struct ContentView: View {
     @AppStorage("ogMachineName") var ogMachineName = ""
     @EnvironmentObject var mgr: ErosionManager
     @State private var showSettings = false
+    @State private var showIslandPreview = false
     
     var body: some View {
         NavigationStack {
@@ -26,6 +27,11 @@ struct ContentView: View {
                 }
                 
                 Section {
+                    Button {
+                        showIslandPreview = true
+                    } label: {
+                        Label("灵动岛可视区域模拟", systemImage: "rectangle.topthird.inset.filled")
+                    }
                     Button("注销设备 (Respring)") {
                         mgr.shouldRespring = true
                     }
@@ -53,6 +59,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+            }
+            .sheet(isPresented: $showIslandPreview) {
+                IslandViewportPreview()
             }
             .onAppear {
                 if ogMachineName.isEmpty {
