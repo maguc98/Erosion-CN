@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>title</key>
+    <string>灵动岛位置调整</string>
+    <key>items</key>
+    <array>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>label</key>
+            <string>iPhone 12 mini / iPhone13,1</string>
+            <key>footerText</key>
+            <string>仅调整 SpringBoard 灵动岛窗口的垂直位置，不修改机型标识、屏幕分辨率或其他 MobileGestalt 参数。偏移单位为 point，向下为正值。</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSSwitchCell</string>
+            <key>default</key>
+            <false/>
+            <key>defaults</key>
+            <string>com.maguc98.dynamicislandoffsetprefs</string>
+            <key>key</key>
+            <string>Enabled</string>
+            <key>label</key>
+            <string>启用灵动岛下移</string>
+            <key>PostNotification</key>
+            <string>com.maguc98.dynamicislandoffsetprefs/changed</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSSliderCell</string>
+            <key>default</key>
+            <real>30</real>
+            <key>min</key>
+            <real>0</real>
+            <key>max</key>
+            <real>80</real>
+            <key>showValue</key>
+            <true/>
+            <key>defaults</key>
+            <string>com.maguc98.dynamicislandoffsetprefs</string>
+            <key>key</key>
+            <string>YOffset</string>
+            <key>label</key>
+            <string>向下偏移（pt）</string>
+            <key>PostNotification</key>
+            <string>com.maguc98.dynamicislandoffsetprefs/changed</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>footerText</key>
+            <string>建议先保持关闭。首次测试可从 20–30 pt 区间逐步调整；不同 iOS 构建的布局坐标可能变化。若发生异常，关闭开关并重新启动 SpringBoard。</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSButtonCell</string>
+            <key>label</key>
+            <string>重新启动 SpringBoard 以应用设置</string>
+            <key>action</key>
+            <string>requestRespring:</string>
+        </dict>
+    </array>
+</dict>
+</plist>

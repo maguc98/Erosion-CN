@@ -1,0 +1,51 @@
+name: Build Dynamic Island Offset Tweak
+
+on:
+  push:
+    branches:
+      - fix/siri-animation-iphone12mini
+    paths:
+      - "DynamicIslandOffset/**"
+      - ".github/workflows/build-island-offset.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Theos and iOS SDKs
+        uses: Randomblock1/theos-action@184d67154adbc25eb9b11694b9a51fdb55dee51d
+
+      - name: Build rootless package
+        working-directory: DynamicIslandOffset
+        run: |
+          make clean
+          rm -rf packages
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          mkdir -p dist
+          package="$(find packages -maxdepth 1 -name '*.deb' -print -quit)"
+          test -n "$package"
+          cp "$package" dist/DynamicIslandOffset-rootless.deb
+
+      - name: Build roothide package
+        working-directory: DynamicIslandOffset
+        run: |
+          make clean
+          rm -rf packages
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          package="$(find packages -maxdepth 1 -name '*.deb' -print -quit)"
+          test -n "$package"
+          cp "$package" dist/DynamicIslandOffset-roothide.deb
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIslandOffset-debs
+          path: DynamicIslandOffset/dist/*.deb
+          if-no-files-found: error
