@@ -119,3 +119,27 @@ Source:
 ### 8. Next non-invasive research step
 
 If work continues without a supported injection environment, the remaining useful task is static analysis of the exact `24C5037i` firmware for the SpringBoard aperture classes and their layout call paths. The class name `SBSystemApertureWindow` is a historically observed target, but its presence and method behavior must be confirmed against this exact build before writing a hook. Static class discovery is not a substitute for runtime validation.
+
+
+## Exact target firmware identified (2026-11-17)
+
+The exact restore image for the reported target is listed as:
+
+- Device: iPhone 12 mini, `iPhone13,1`
+- Build: iOS 27.3 beta 1, `24C5037i`
+- IPSW: `iPhone13,1_27.3_24C5037i_Restore.ipsw`
+- Reported size: 11,398,980,787 bytes (about 11.40 GB)
+- Reported SHA-256: `93bb94abc01a4cf26b469a3e616c2be7ebaf2109290da2bb55ad2598db10e87b`
+- Apple CDN URL: https://updates.cdn-apple.com/2026FallSeed/a5bda965-d643-44de-b550-a9f7a262a3b3/iPhone13,1_27.3_24C5037i_Restore.ipsw
+
+The build and device mapping are listed by The Apple Wiki's iOS 27.x beta firmware table and the IPSW listing page. These are firmware catalogues, not Apple security or compatibility guarantees:
+- https://theapplewiki.com/wiki/Beta_Firmware/iPhone/27.x
+- https://www.betaprofile.dev/ipsw/ios-27-3-beta/
+
+### Static-analysis input still required
+
+The exact-build class/layout investigation cannot be honestly completed from a model identifier or a source-code name alone. It requires the decrypted target-build dyld shared cache and, ideally, the matching SpringBoard binary / symbols. No target-build binary has yet been obtained or inspected in this workflow.
+
+Do not use an IPSW from another model or build as a substitute. Do not restore this IPSW merely to obtain analysis files. A restore image is approximately 11.4 GB and restoring it is destructive; the user should not be asked to flash it for this research.
+
+Until the exact-build binary is available, `SBSystemApertureWindow` remains a historical candidate, not a verified class on `24C5037i`.
