@@ -320,6 +320,28 @@ struct GestaltView: View {
                             .buttonStyle(.plain)
                         }
                     }
+                    // iPhone 12 mini (iPhone13,1): keep the original panel geometry available
+                    // while testing Apple Intelligence/Siri model spoofing. This is a reversible
+                    // diagnostic aid, not a claim that the subtype controls Siri's renderer.
+                    if ogMachineName == "iPhone13,1",
+                       mgProductType != ogMachineName,
+                       mgSubtype != mgOgSubtype {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("检测到 iPhone 12 mini 屏幕参数与原厂不一致", systemImage: "exclamationmark.triangle.fill")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.orange)
+                            Text("旧款 mini 伪装为较新机型时，Siri / Apple Intelligence 动画曾出现边缘裁切。建议先保留机型伪装，只将屏幕子类型恢复为本机原厂值，重启后对比。此操作不会关闭机型伪装，也不能保证修复。")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Button {
+                                mgSubtype = mgOgSubtype
+                            } label: {
+                                Label("仅恢复原厂屏幕子类型（\\(mgOgSubtype)）", systemImage: "arrow.uturn.backward")
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        .padding(.vertical, 4)
+                    }
                 } header: {
                     HeaderLabel(L("地区与功能准入 (Eligibility)"), symbol: "flag")
                 } footer: {
