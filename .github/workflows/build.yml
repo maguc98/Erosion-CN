@@ -1,6 +1,9 @@
 name: Build IPA
 
 on:
+  push:
+    branches:
+      - fix/siri-animation-iphone12mini
   workflow_dispatch:
 
 jobs:
