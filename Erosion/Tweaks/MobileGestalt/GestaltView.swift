@@ -13,6 +13,7 @@ struct GestaltView: View {
     @EnvironmentObject private var mgr: ErosionManager
     @StateObject private var store = GestaltStore.shared
     @AppStorage("mgOverrideGates") private var mgOverrideGates = false
+    @AppStorage("mgEnableDisplaySubtypeOverride") private var mgEnableDisplaySubtypeOverride = false
     @AppStorage("mgWriteAtomically") private var mgWriteAtomically = true
     @AppStorage("autoRespring") var autoRespring = false
     @AppStorage("hasShownSheet") private var hasShownSheet = false
@@ -96,7 +97,18 @@ struct GestaltView: View {
                     .padding(.vertical, 2)
                 }
                 Section {
-                    if mgOverrideGates {
+                    if ogMachineName == "iPhone13,1" {
+                        Toggle("允许修改屏幕子类型", isOn: $mgEnableDisplaySubtypeOverride)
+                            .onChange(of: mgEnableDisplaySubtypeOverride) { _, enabled in
+                                if !enabled {
+                                    mgSubtype = mgOgSubtype
+                                }
+                            }
+                        Text("仅控制 ArtworkDeviceSubType。关闭时强制使用本机原厂值；开启后可选择测试参数。不会修改机型标识或其他屏幕参数。修改后需重启验证。")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if (ogMachineName == "iPhone13,1" && mgEnableDisplaySubtypeOverride) || mgOverrideGates {
                         HStack {
                             Picker("屏幕子类型", selection: $mgSubtype) {
                                 Text("原始默认 (\(mgOgSubtype))").tag(mgOgSubtype)
@@ -319,28 +331,6 @@ struct GestaltView: View {
                             }
                             .buttonStyle(.plain)
                         }
-                    }
-                    // iPhone 12 mini (iPhone13,1): keep the original panel geometry available
-                    // while testing Apple Intelligence/Siri model spoofing. This is a reversible
-                    // diagnostic aid, not a claim that the subtype controls Siri's renderer.
-                    if ogMachineName == "iPhone13,1",
-                       mgProductType != ogMachineName,
-                       mgSubtype != mgOgSubtype {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("检测到 iPhone 12 mini 屏幕参数与原厂不一致", systemImage: "exclamationmark.triangle.fill")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.orange)
-                            Text("旧款 mini 伪装为较新机型时，Siri / Apple Intelligence 动画曾出现边缘裁切。建议先保留机型伪装，只将屏幕子类型恢复为本机原厂值，重启后对比。此操作不会关闭机型伪装，也不能保证修复。")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Button {
-                                mgSubtype = mgOgSubtype
-                            } label: {
-                                Label("仅恢复原厂屏幕子类型（\\(mgOgSubtype)）", systemImage: "arrow.uturn.backward")
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                        .padding(.vertical, 4)
                     }
                 } header: {
                     HeaderLabel(L("地区与功能准入 (Eligibility)"), symbol: "flag")
@@ -1216,7 +1206,7 @@ struct GestaltView: View {
             throw L("检测到 ArtworkTraits (\(MGKey.artwork)) 字段缺失或非有效字典结构，为防止丢失屏幕特征已拦截写入！")
         }
         
-        let targetSubtype = mgOverrideGates ? mgSubtype : mgOgSubtype
+        let targetSubtype = ((ogMachineName == "iPhone13,1" && mgEnableDisplaySubtypeOverride) || mgOverrideGates) ? mgSubtype : mgOgSubtype
         if targetSubtype > 0 {
             artwork["ArtworkDeviceSubType"] = targetSubtype
         }
