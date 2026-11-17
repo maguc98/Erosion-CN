@@ -72,3 +72,50 @@ The upstream Erosion README currently states that `worse_query` is patched in iO
 
 Source:
 - https://github.com/jailbreakdotparty/Erosion/blob/main/README.md
+
+
+## Further injection-path research (2026-11-17)
+
+### 5. A modern public tweak runner exists, but it is not for this device
+
+The public Liter8 project demonstrates that a tethered, non-TrollStore jailbreak environment can provide a real SpringBoard tweak loader: its documentation describes ElleKit, Objective-C hooks, C-function hooks, and the ability to install a dylib under `/var/jb/usr/lib/TweakInject/` and respawn the target.
+
+But its own support statement is explicit:
+- Device target: **iPhone 11 only** (`iPhone12,1`, A13).
+- iOS 27.3 beta 1 (`24C5037i`): marked `run` for iPhone 11 only; iPhone 11 Pro / Pro Max marked `experimental`.
+- It does not claim iPhone 12 mini (`iPhone13,1`, A14) support.
+- The workflow is tethered: it requires a Mac and pwn-DFU boot each time.
+- The restore step erases the phone; its README says SEP and passcode do not work.
+- The tweak-loader instructions say the tested ElleKit setup was device-tested on iPhone 11 (`n104ap`) on build `24B5099f`; no other build was boot-tested with a C hook.
+
+This is a useful proof that a system-level hook is technically possible in a different, specifically supported environment. It is **not a usable or safe porting target for the user's A14 iPhone 12 mini**. Do not attempt its restore/boot workflow on the user's device.
+
+Sources:
+- https://github.com/Xplo8E/Liter8
+- https://github.com/Xplo8E/Liter8/blob/main/docs/USING_TWEAKS.md
+
+### 6. Independent iOS 27 exploit research does not establish a route for this A14 build
+
+The public `SKVLENT/iOS27-Research-Exploits` status page says its measured configuration is iPhone 17 Pro (A19 Pro) on iOS 27.0.1 and iPhone 16 Pro Max (A18 Pro) on iOS 27.2. It explicitly states that kernel read/write and a jailbreak were not demonstrated in the first configuration, and clarifies that its demonstrated sandbox escape crosses a container boundary in userland; it does not provide kernel code execution, root, or unsigned-code execution outside the sandbox.
+
+Those measurements do **not** prove that no exploit exists on every device/build, and they are not measurements on iPhone 12 mini / A14 / 24C5037i. They do, however, provide no basis to claim a generic iOS 27 kernel exploit or SpringBoard injection method is available for this target.
+
+Source:
+- https://github.com/SKVLENT/iOS27-Research-Exploits/blob/main/STATUS.md
+- https://github.com/SKVLENT/iOS27-Research-Exploits/blob/main/README.md
+
+### 7. Current go/no-go decision
+
+| Candidate | Why it is not usable here |
+|---|---|
+| Erosion / `worse_query` | Filesystem sandbox extension; no process injection or kernel execution |
+| VisibleIsland Theos tweak | Correct historical hook idea; old iOS 16 support only, no verified 27.3b1 runtime |
+| Cyanide / DarkSword | The documented kernel exploit window does not include iOS 27.3b1 |
+| Liter8 | Has a real tweak loader, but explicitly supports iPhone 11 (A13), not iPhone 12 mini (A14); destructive tethered restore workflow |
+| Calif research demos | No public end-user injection tool or released supported chain for this exact device/build was identified |
+
+**Result:** no verified non-TrollStore SpringBoard injection route for iPhone 12 mini / A14 / iOS 27.3 beta 1 has been found in the public sources inspected on 2026-11-17. Do not compile or install a live offset tweak until that prerequisite is met.
+
+### 8. Next non-invasive research step
+
+If work continues without a supported injection environment, the remaining useful task is static analysis of the exact `24C5037i` firmware for the SpringBoard aperture classes and their layout call paths. The class name `SBSystemApertureWindow` is a historically observed target, but its presence and method behavior must be confirmed against this exact build before writing a hook. Static class discovery is not a substitute for runtime validation.
