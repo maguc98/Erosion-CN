@@ -97,59 +97,14 @@ struct GestaltView: View {
                     .padding(.vertical, 2)
                 }
                 Section {
-                    if ogMachineName == "iPhone13,1" {
-                        Toggle("允许修改屏幕子类型", isOn: $mgEnableDisplaySubtypeOverride)
-                            .onChange(of: mgEnableDisplaySubtypeOverride) { _, enabled in
-                                if !enabled {
-                                    mgSubtype = mgOgSubtype
-                                }
-                            }
-                        Text("仅修改 ArtworkDeviceSubType，不是灵动岛位置调节：不会把系统灵动岛或 Siri 动画下移。不同子类型可能造成界面比例或裁切异常；没有对应机型实测依据时，请保持原厂值。")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    NavigationLink {
+                        IslandViewportPreview()
+                    } label: {
+                        Label("自定义屏幕宽度与高度", systemImage: "rectangle.resize")
                     }
-                    if (ogMachineName == "iPhone13,1" && mgEnableDisplaySubtypeOverride) || mgOverrideGates {
-                        HStack {
-                            Picker("屏幕子类型（非位置调节）", selection: $mgSubtype) {
-                                Text("原始默认 (\(mgOgSubtype))").tag(mgOgSubtype)
-                                if mgOgSubtype != 2436 {
-                                    if isDynamIslandHD() && doubleSysVrs() < 19.0 {
-                                        Text("禁用灵动岛 (2436)").tag(2436)
-                                    } else if isHomeButtonHD() {
-                                        Text("iPhone X 全面屏手势 (2436)").tag(2436)
-                                    }
-                                }
-                                if mgOgSubtype != 2556 {
-                                    Text("iPhone 14 Pro / 15 Pro (2556)").tag(2556)
-                                }
-                                if mgOgSubtype != 2796 {
-                                    Text("iPhone 14 Pro Max / 15 Pro Max (2796)").tag(2796)
-                                }
-                                if doubleSysVrs() >= 18.0 {
-                                    if mgOgSubtype != 2622 {
-                                        Text("iPhone 16 Pro / 17 Pro (2622)").tag(2622)
-                                    }
-                                    if mgOgSubtype != 2868 {
-                                        Text("iPhone 16 Pro Max / 17 Pro Max (2868)").tag(2868)
-                                    }
-                                }
-                                if doubleSysVrs() >= 26.0 && mgOgSubtype != 2736 {
-                                    Text("iPhone Air (2736)").tag(2736)
-                                }
-                                if doubleSysVrs() >= 27.0 && mgOgSubtype != 2670 {
-                                    Text("iPhone 18 Pro Max (2670)").tag(2670)
-                                }
-                            }
-                            Spacer()
-                            Button {
-                                Alertinator.shared.alert(title: L("屏幕子类型说明"), body: MGMsg.subtype)
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .frame(width: 24, height: 22)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+                    Text("可自由输入预览画布宽度和高度，并调整刘海遮挡区与灵动岛示意位置。此功能仅用于预览，不会修改系统分辨率或 SpringBoard。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     Toggle("自定义机型名称", isOn: $mgEnableDeviceName)
                     if mgEnableDeviceName {
                         TextField("输入自定义机型名称", text: $mgDeviceName)
