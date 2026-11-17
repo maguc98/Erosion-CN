@@ -54,3 +54,24 @@ Erosion-CN 是普通 SwiftUI 应用，核心修改对象是 MobileGestalt / Cach
 
 ## 来源
 上游项目：Kianuni/Erosion-CN（GPL-3.0）。
+
+## Erosion 当前实现的进一步代码核查（2026-11-17）
+
+已直接检查工作分支中的 `GestaltView.swift` 与 `GestaltStore.swift`：
+
+- “允许修改屏幕子类型”开关只作用于 `ArtworkDeviceSubType`，写入位置是 `CacheExtra["oPeik/9e8lQWMszEjbPzng"]["ArtworkDeviceSubType"]`。
+- 机型伪装另行写入 `CacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"]`（ProductType）；两者是不同字段，不能把它们当成一个“灵动岛偏移量”。
+- 灵动岛能力开关使用 `YlEtTtHlNesRBMal1CqRaA`（DeviceSupportsDynamicIsland），它表达能力标记，不是坐标。
+- 当前子类型选项中的 2556、2622、2670、2736 等是设备显示/Artwork 子类型预设值；代码没有提供独立的 Y 轴偏移字段，也没有 Siri 动画坐标参数。
+- 因此，继续尝试轮换这些 subtype 数值并不能构成有依据的“下移灵动岛”实验；它可能改变系统对屏幕/设备形态的判断，反而引入更多 UI 不匹配。
+
+### 本轮结论与实验优先级
+
+1. 暂停把 `ArtworkDeviceSubType` 当作位置滑块使用；除非有同一 iOS build、同一硬件的实测对照，不新增偏移预设。
+2. 先对照原厂备份与当前 MobileGestalt 中的三项：ProductType、ArtworkDeviceSubType、DeviceSupportsDynamicIsland。记录值即可，不先写入。
+3. 如果用户已做“关闭机型伪装 / 恢复原厂”A/B，按结果判断；如果尚未做，先完成这一项，因为它能区分“伪装组合导致的布局错误”与“系统动画自身问题”。
+4. 当前分支的“灵动岛可视区域模拟”仍只是 Erosion 内的示意工具，不会改变系统窗口。
+
+### 外部版本兼容性补充
+
+公开的 GestaltEdit 项目 README 标注其工具支持 iOS/iPadOS 27 beta 1–beta 4 的特定 build，并明确提醒 MobileGestalt 写入可能破坏系统功能；这只能说明相关 MobileGestalt 编辑工具正在适配该 beta 范围，不能证明某个 subtype 能修复 iPhone 12 mini 的 Siri 动画裁切，也不能证明 SpringBoard 注入可用。参考：https://github.com/therajes/gestaltedit
