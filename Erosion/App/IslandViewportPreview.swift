@@ -1,65 +1,64 @@
 import SwiftUI
 
-/// Safe visual prototype only. It does not alter display modes, resolution,
-/// SpringBoard, MobileGestalt, or any system configuration.
+/// Custom viewport preview only. This does not change the physical display,
+/// SpringBoard layout, Siri animation, MobileGestalt, or system resolution.
 struct IslandViewportPreview: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("islandPreviewTopMask") private var topMask: Double = 54
-    @AppStorage("islandPreviewOffset") private var islandOffset: Double = 34
+    @AppStorage("islandPreviewCanvasWidth") private var canvasWidth = 375.0
+    @AppStorage("islandPreviewCanvasHeight") private var canvasHeight = 812.0
+    @AppStorage("islandPreviewTopMask") private var topMask = 54.0
+    @AppStorage("islandPreviewOffset") private var islandOffset = 34.0
 
-    private let referenceWidth: CGFloat = 375
-    private let referenceHeight: CGFloat = 812
+    private var safeWidth: CGFloat { CGFloat(min(max(canvasWidth, 240), 600)) }
+    private var safeHeight: CGFloat { CGFloat(min(max(canvasHeight, 400), 1300)) }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 22) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("可视区域模拟")
+                        Text("自定义屏幕尺寸")
                             .font(.title2.bold())
-                        Text("仅用于预览刘海遮挡区与灵动岛目标位置，不会修改系统屏幕。")
+                        Text("自由输入宽度和高度，预览区域会按你的数值实时调整。")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     devicePreview
-                        .frame(maxWidth: 280)
+                        .frame(maxHeight: 420)
                         .frame(maxWidth: .infinity)
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("顶部遮挡高度")
-                            Spacer()
-                            Text("\(Int(topMask)) pt")
-                                .monospacedDigit()
+                    GroupBox("画布尺寸（pt）") {
+                        VStack(spacing: 14) {
+                            dimensionField(title: "宽度", value: $canvasWidth, range: 240...600)
+                            dimensionField(title: "高度", value: $canvasHeight, range: 400...1300)
+                            Text("预览范围：宽 240–600 pt，高 400–1300 pt。输入值只改变本页模拟画布。")
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        Slider(value: $topMask, in: 0...120, step: 1)
-                        Text("模拟把刘海所在的顶部区域排除在可视内容之外。")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .padding(.top, 6)
                     }
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("灵动岛向下偏移")
-                            Spacer()
-                            Text("\(Int(islandOffset)) pt")
-                                .monospacedDigit()
+                    GroupBox("刘海与灵动岛模拟") {
+                        VStack(alignment: .leading, spacing: 14) {
+                            valueSlider(title: "顶部遮挡高度", value: $topMask, range: 0...160, suffix: "pt")
+                            valueSlider(title: "灵动岛垂直位置", value: $islandOffset, range: 0...180, suffix: "pt")
+                            Text("这些参数仅改变示意图，不会移动真实系统灵动岛或 Siri 动画。")
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        Slider(value: $islandOffset, in: 0...100, step: 1)
-                        Text("只改变上方示意图中的灵动岛位置，不会移动真实系统灵动岛。")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .padding(.top, 6)
                     }
 
                     HStack {
-                        Label("仅预览", systemImage: "eye")
+                        Label("仅预览，不写入系统", systemImage: "eye")
                             .font(.caption.weight(.semibold))
                         Spacer()
                         Button("恢复默认") {
+                            canvasWidth = 375
+                            canvasHeight = 812
                             topMask = 54
                             islandOffset = 34
                         }
@@ -70,7 +69,7 @@ struct IslandViewportPreview: View {
                 }
                 .padding()
             }
-            .navigationTitle("灵动岛位置实验")
+            .navigationTitle("尺寸与位置实验")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -80,46 +79,75 @@ struct IslandViewportPreview: View {
         }
     }
 
+    private func dimensionField(title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            TextField(title, value: value, format: .number.precision(.fractionLength(0)))
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 104)
+                .onChange(of: value.wrappedValue) { _, newValue in
+                    if newValue.isFinite {
+                        value.wrappedValue = min(max(newValue, range.lowerBound), range.upperBound)
+                    }
+                }
+            Text("pt")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func valueSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>, suffix: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(title)
+                Spacer()
+                Text("\\(Int(value.wrappedValue)) \\(suffix)")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: value, in: range, step: 1)
+        }
+    }
+
     private var devicePreview: some View {
         GeometryReader { proxy in
             let width = proxy.size.width
-            let scale = width / referenceWidth
-            let height = referenceHeight * scale
-            let maskHeight = topMask * scale
-            let islandY = (12 + islandOffset) * scale
+            let scale = width / safeWidth
+            let height = safeHeight * scale
+            let maskHeight = CGFloat(topMask) * scale
+            let islandY = (12 + CGFloat(islandOffset)) * scale
+            let corner = min(38 * scale, width * 0.12)
 
             ZStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 38)
+                RoundedRectangle(cornerRadius: corner)
                     .fill(Color(red: 0.07, green: 0.08, blue: 0.10))
 
-                RoundedRectangle(cornerRadius: 34)
+                RoundedRectangle(cornerRadius: max(corner - 4, 4))
                     .fill(Color(red: 0.12, green: 0.15, blue: 0.20))
-                    .padding(5)
+                    .padding(5 * scale)
 
                 VStack(spacing: 0) {
                     Spacer().frame(height: maskHeight)
-                    Rectangle()
-                        .fill(Color.white.opacity(0.035))
-                    Spacer().frame(height: 90 * scale)
+                    Rectangle().fill(Color.white.opacity(0.035))
+                    Spacer(minLength: 0)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 32))
-                .padding(7)
+                .clipShape(RoundedRectangle(cornerRadius: max(corner - 6, 4)))
+                .padding(7 * scale)
 
-                // Physical notch reference; this is a diagram, not a live overlay.
                 Capsule()
                     .fill(Color.black)
-                    .frame(width: 160 * scale, height: 34 * scale)
+                    .frame(width: min(160 * scale, width * 0.52), height: 34 * scale)
                     .position(x: width / 2, y: 22 * scale)
 
-                // Target island position is drawn independently from the notch mask.
                 Capsule()
                     .fill(Color.black)
-                    .frame(width: 126 * scale, height: 34 * scale)
+                    .frame(width: min(126 * scale, width * 0.44), height: 34 * scale)
                     .overlay {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 5 * scale) {
                             Circle().fill(Color.green).frame(width: 5 * scale, height: 5 * scale)
                             Text("灵动岛示意")
-                                .font(.system(size: 9 * scale, weight: .medium))
+                                .font(.system(size: max(8, 9 * scale), weight: .medium))
                                 .foregroundStyle(.white.opacity(0.85))
                         }
                     }
@@ -129,29 +157,29 @@ struct IslandViewportPreview: View {
                     .fill(Color.orange.opacity(0.18))
                     .frame(height: maskHeight)
                     .overlay(alignment: .bottom) {
-                        Text("顶部遮挡区 · \(Int(topMask)) pt")
-                            .font(.system(size: 9 * scale, weight: .semibold))
+                        Text("顶部遮挡区 · \\(Int(topMask)) pt")
+                            .font(.system(size: max(8, 9 * scale), weight: .semibold))
                             .foregroundStyle(.orange)
                             .padding(.bottom, 4 * scale)
                     }
-                    .padding(.horizontal, 7)
-                    .offset(y: 7)
+                    .padding(.horizontal, 7 * scale)
+                    .offset(y: 7 * scale)
 
                 VStack {
                     Spacer()
-                    Text("375 × 812 pt 示意比例")
-                        .font(.system(size: 9 * scale, weight: .medium))
+                    Text("\\(Int(canvasWidth)) × \\(Int(canvasHeight)) pt")
+                        .font(.system(size: max(8, 9 * scale), weight: .medium))
                         .foregroundStyle(.white.opacity(0.55))
                         .padding(.bottom, 18 * scale)
                 }
             }
             .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 38))
+            .clipShape(RoundedRectangle(cornerRadius: corner))
             .overlay {
-                RoundedRectangle(cornerRadius: 38)
+                RoundedRectangle(cornerRadius: corner)
                     .stroke(Color.white.opacity(0.18), lineWidth: 2)
             }
         }
-        .aspectRatio(referenceWidth / referenceHeight, contentMode: .fit)
+        .aspectRatio(safeWidth / safeHeight, contentMode: .fit)
     }
 }
