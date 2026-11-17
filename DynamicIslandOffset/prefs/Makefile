@@ -6,7 +6,7 @@ include $(THEOS)/makefiles/common.mk
 BUNDLE_NAME = DynamicIslandOffsetPrefs
 DynamicIslandOffsetPrefs_FILES = IOCRootListController.m
 DynamicIslandOffsetPrefs_FRAMEWORKS = UIKit
-DynamicIslandOffsetPrefs_PRIVATE_FRAMEWORKS = Preferences
+DynamicIslandOffsetPrefs_LDFLAGS = -undefined dynamic_lookup
 DynamicIslandOffsetPrefs_INSTALL_PATH = /Library/PreferenceBundles
 DynamicIslandOffsetPrefs_CFLAGS = -fobjc-arc
 
