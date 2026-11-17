@@ -26,7 +26,7 @@ static NSString *IOHardwareModel(void) {
         return nil;
     }
 
-    char *machine = calloc(size, sizeof(char));
+    char *machine = (char *)calloc(size, sizeof(char));
     if (!machine) {
         return nil;
     }
@@ -70,10 +70,16 @@ static void IORefreshApertureWindows(void) {
         }
 
         UIApplication *application = [UIApplication sharedApplication];
-        for (UIWindow *window in application.windows) {
-            if ([window isKindOfClass:apertureClass]) {
-                [window setNeedsLayout];
-                [window layoutIfNeeded];
+        for (UIScene *scene in application.connectedScenes) {
+            if (![scene isKindOfClass:[UIWindowScene class]]) {
+                continue;
+            }
+            UIWindowScene *windowScene = (UIWindowScene *)scene;
+            for (UIWindow *window in windowScene.windows) {
+                if ([window isKindOfClass:apertureClass]) {
+                    [window setNeedsLayout];
+                    [window layoutIfNeeded];
+                }
             }
         }
     });
@@ -107,6 +113,9 @@ static void IORespringRequested(CFNotificationCenterRef center,
         ((void (*)(id, SEL, BOOL))objc_msgSend)(service, restartSelector, YES);
     }
 }
+
+@interface SBSystemApertureWindow : UIView
+@end
 
 %group SpringBoardHooks
 
